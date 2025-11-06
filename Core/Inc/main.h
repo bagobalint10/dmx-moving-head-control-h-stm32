@@ -50,8 +50,6 @@ extern "C" {
 
 /* USER CODE END EM */
 
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -71,40 +69,6 @@ uint32_t tim_5_get_value(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
-#define MOTOR_1_PULSE_Pin GPIO_PIN_0
-#define MOTOR_1_PULSE_GPIO_Port GPIOA
-#define MOTOR_2_PULSE_Pin GPIO_PIN_1
-#define MOTOR_2_PULSE_GPIO_Port GPIOA
-#define MOTOR_2_DIRECTION_Pin GPIO_PIN_2
-#define MOTOR_2_DIRECTION_GPIO_Port GPIOA
-#define MOTOR_1_DIRECTION_Pin GPIO_PIN_3
-#define MOTOR_1_DIRECTION_GPIO_Port GPIOA
-#define HALL_3_Pin GPIO_PIN_5
-#define HALL_3_GPIO_Port GPIOA
-#define HALL_2_Pin GPIO_PIN_0
-#define HALL_2_GPIO_Port GPIOB
-#define HALL_1_Pin GPIO_PIN_1
-#define HALL_1_GPIO_Port GPIOB
-#define SR_LATCH_Pin GPIO_PIN_12
-#define SR_LATCH_GPIO_Port GPIOA
-#define SR_CLOCK_Pin GPIO_PIN_15
-#define SR_CLOCK_GPIO_Port GPIOA
-#define SR_DATA_Pin GPIO_PIN_3
-#define SR_DATA_GPIO_Port GPIOB
-#define RELAY_Pin GPIO_PIN_4
-#define RELAY_GPIO_Port GPIOB
-#define GOMB_UP_Pin GPIO_PIN_6
-#define GOMB_UP_GPIO_Port GPIOB
-#define GOMB_UP_EXTI_IRQn EXTI9_5_IRQn
-#define GOMB_DOWN_Pin GPIO_PIN_7
-#define GOMB_DOWN_GPIO_Port GPIOB
-#define GOMB_DOWN_EXTI_IRQn EXTI9_5_IRQn
-#define GOMB_ENTER_Pin GPIO_PIN_8
-#define GOMB_ENTER_GPIO_Port GPIOB
-#define GOMB_ENTER_EXTI_IRQn EXTI9_5_IRQn
-#define GOMB_MODE_Pin GPIO_PIN_9
-#define GOMB_MODE_GPIO_Port GPIOB
-#define GOMB_MODE_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 

@@ -24,8 +24,8 @@
 #include <my_main.h>
 #include <interrupt_s.h>
 #include <dmx_usart_s.h>
-#include <motor_1_drive_s.h>
-#include <motor_2_drive_s.h>
+//#include <motor_1_drive_s.h>
+//#include <motor_2_drive_s.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +46,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim5;
 
 UART_HandleTypeDef huart1;
 
@@ -59,7 +58,6 @@ uint8_t rx_buffer;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
-static void MX_TIM5_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -100,7 +98,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM2_Init();
-  MX_TIM5_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
@@ -109,17 +106,17 @@ int main(void)
   my_main_init();
 
   HAL_UART_Receive_IT(&huart1, &rx_buffer, 1);
-  HAL_TIM_Base_Start_IT(&htim2);
-  HAL_TIM_Base_Start_IT(&htim5);
+  //HAL_TIM_Base_Start_IT(&htim2);
+  //HAL_TIM_Base_Start_IT(&htim5);
 
 
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PWM_ON_DUTY); // set pwm duty
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					 // start tim2 pwm channel
-  htim2.Instance->CR1 &= ~TIM_CR1_ARPE; 					 // ARPE = 0 → shadow OFF
+  //__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PWM_ON_DUTY); // set pwm duty
+  //HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					 // start tim2 pwm channel
+  //htim2.Instance->CR1 &= ~TIM_CR1_ARPE; 					 // ARPE = 0 → shadow OFF
 
-  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, PWM_ON_DUTY); // set pwm duty
-  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);					 // start tim5 pwm channel
-  htim5.Instance->CR1 &= ~TIM_CR1_ARPE; 					 // ARPE = 0 → shadow OFF
+  //__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, PWM_ON_DUTY); // set pwm duty
+  //HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);					 // start tim5 pwm channel
+  //htim5.Instance->CR1 &= ~TIM_CR1_ARPE; 					 // ARPE = 0 → shadow OFF
 
   /* USER CODE END 2 */
 
@@ -128,8 +125,8 @@ int main(void)
   while (1)
   {
 	  my_main_loop();
-	  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-	  HAL_Delay(100);
+	  //HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	  //HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -196,7 +193,6 @@ static void MX_TIM2_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM2_Init 1 */
 
@@ -216,77 +212,15 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
-  HAL_TIM_MspPostInit(&htim2);
-
-}
-
-/**
-  * @brief TIM5 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM5_Init(void)
-{
-
-  /* USER CODE BEGIN TIM5_Init 0 */
-
-  /* USER CODE END TIM5_Init 0 */
-
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
-
-  /* USER CODE BEGIN TIM5_Init 1 */
-
-  /* USER CODE END TIM5_Init 1 */
-  htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 0;
-  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 840000;
-  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_PWM_Init(&htim5) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM5_Init 2 */
-
-  /* USER CODE END TIM5_Init 2 */
-  HAL_TIM_MspPostInit(&htim5);
 
 }
 
@@ -338,16 +272,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, MOTOR_2_DIRECTION_Pin|MOTOR_1_DIRECTION_Pin|SR_LATCH_Pin|SR_CLOCK_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SR_DATA_Pin|RELAY_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -356,51 +283,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOTOR_2_DIRECTION_Pin MOTOR_1_DIRECTION_Pin SR_LATCH_Pin SR_CLOCK_Pin */
-  GPIO_InitStruct.Pin = MOTOR_2_DIRECTION_Pin|MOTOR_1_DIRECTION_Pin|SR_LATCH_Pin|SR_CLOCK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : HALL_3_Pin */
-  GPIO_InitStruct.Pin = HALL_3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(HALL_3_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : HALL_2_Pin HALL_1_Pin */
-  GPIO_InitStruct.Pin = HALL_2_Pin|HALL_1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : SR_DATA_Pin RELAY_Pin */
-  GPIO_InitStruct.Pin = SR_DATA_Pin|RELAY_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : GOMB_UP_Pin GOMB_DOWN_Pin GOMB_ENTER_Pin GOMB_MODE_Pin */
-  GPIO_InitStruct.Pin = GOMB_UP_Pin|GOMB_DOWN_Pin|GOMB_ENTER_Pin|GOMB_MODE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+/*
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)			// gombok interrupt callback
 {
 	ISR_GPIO_EXTI_Callback(GPIO_Pin);
-}
+}*/
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -424,7 +316,7 @@ void usart_transmit(uint8_t *data)
 {
 	HAL_UART_Transmit(&huart1, data, 1, 10);
 }
-
+/*
 void tim_2_set_duty(uint8_t duty)
 {
 	if(duty) __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, PWM_ON_DUTY);
@@ -470,7 +362,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		// motor_2_drive --> interrupt függvénye
 		motor_2_update_timer();
 	}
-}
+}*/
 /* USER CODE END 4 */
 
 /**

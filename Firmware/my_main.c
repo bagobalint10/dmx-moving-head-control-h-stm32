@@ -5,14 +5,14 @@
  *      Author: bagob
  */
 
-#include <control_board_s.h>
+//#include <control_board_s.h>
 #include <my_main.h>
 
 #include <dmx_usart_s.h>
-#include <motor_1_drive_s.h>
-#include <motor_2_drive_s.h>
+//#include <motor_1_drive_s.h>
+//#include <motor_2_drive_s.h>
 
-
+/*
 #define	PAN_CH 11
 #define	PAN_F_CH 12
 #define	TILT_CH 13
@@ -22,7 +22,8 @@
 #define SM_TIME 5							// 70ms egy frame
 #define SM_COUNT 17							// 85 ms mintavételezés
 #define SM_COUNT_REV 0.058824f				// 17 db interpolálás 5ms enként
-
+*/
+/*
 static uint16_t dmx_pan_value = 0;
 static uint16_t dmx_tilt_value = 0;
 static uint8_t  dmx_speed_value = 0;
@@ -30,7 +31,8 @@ static uint8_t  reset_f = 0; 				// 0--reset,  > 0 fut a program
 
 static uint16_t dmx_pan_sm_value = 0;
 static uint16_t dmx_tilt_sm_value = 0;
-
+*/
+/*
 static void dmx_channel_map(void)
 {
 	dmx_pan_value = ((uint16_t)*(dmx_adress_pointer + (PAN_CH-1))<<8)  | ((uint16_t)*(dmx_adress_pointer + (PAN_F_CH-1)));
@@ -78,14 +80,15 @@ static void dmx_signal_smoothing(void)
 		dmx_pan_sm_value = (uint16_t)((float)pan_prev + ((float)count * step));
 	}
 }
-
+*/
 void my_main_init(void)
 {
-	control_board_init();
+	//control_board_init();
 }
 
 void my_main_loop(void)
 {
+	/*
 	reset_f = control_board_main();
 
 	dmx_usart_send();
@@ -103,6 +106,6 @@ void my_main_loop(void)
 	{
 	 motor_1_main(0 , 0); 			// 0 speed, 0 pos resethez
 	 motor_2_main(0 , 0); 			// 0 speed, 0 pos resethez
-	}
+	}*/
 }
 
