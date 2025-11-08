@@ -50,6 +50,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -69,6 +71,44 @@ uint32_t tim_5_get_value(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_13
 #define LED_GPIO_Port GPIOC
+#define MOTOR_1_A_Pin GPIO_PIN_0
+#define MOTOR_1_A_GPIO_Port GPIOA
+#define MOTOR_1_B_Pin GPIO_PIN_1
+#define MOTOR_1_B_GPIO_Port GPIOA
+#define MOTOR_2_A_Pin GPIO_PIN_2
+#define MOTOR_2_A_GPIO_Port GPIOA
+#define MOTOR_2_B_Pin GPIO_PIN_3
+#define MOTOR_2_B_GPIO_Port GPIOA
+#define MOTOR_3_A_Pin GPIO_PIN_6
+#define MOTOR_3_A_GPIO_Port GPIOA
+#define MOTOR_3_B_Pin GPIO_PIN_7
+#define MOTOR_3_B_GPIO_Port GPIOA
+#define MOTOR_4_A_Pin GPIO_PIN_0
+#define MOTOR_4_A_GPIO_Port GPIOB
+#define MOTOR_4_B_Pin GPIO_PIN_1
+#define MOTOR_4_B_GPIO_Port GPIOB
+#define HALL_1_Pin GPIO_PIN_12
+#define HALL_1_GPIO_Port GPIOB
+#define HALL_2_Pin GPIO_PIN_13
+#define HALL_2_GPIO_Port GPIOB
+#define HALL_3_Pin GPIO_PIN_14
+#define HALL_3_GPIO_Port GPIOB
+#define MOTOR_8_B_Pin GPIO_PIN_8
+#define MOTOR_8_B_GPIO_Port GPIOA
+#define MOTOR_8_A_Pin GPIO_PIN_9
+#define MOTOR_8_A_GPIO_Port GPIOA
+#define MOTOR_7_B_Pin GPIO_PIN_10
+#define MOTOR_7_B_GPIO_Port GPIOA
+#define MOTOR_7_A_Pin GPIO_PIN_15
+#define MOTOR_7_A_GPIO_Port GPIOA
+#define MOTOR_6_B_Pin GPIO_PIN_6
+#define MOTOR_6_B_GPIO_Port GPIOB
+#define MOTOR_6_A_Pin GPIO_PIN_7
+#define MOTOR_6_A_GPIO_Port GPIOB
+#define MOTOR_5_B_Pin GPIO_PIN_8
+#define MOTOR_5_B_GPIO_Port GPIOB
+#define MOTOR_5_A_Pin GPIO_PIN_9
+#define MOTOR_5_A_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
