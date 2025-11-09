@@ -76,7 +76,7 @@ static void MX_TIM9_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void tmp_leds(uint16_t duty)
-{
+{/*
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty); // 50%?
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty); // 50%?
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, duty); // 50%?
@@ -95,7 +95,7 @@ void tmp_leds(uint16_t duty)
 	__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_1, duty); // 50%?
 	__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, duty); // 50%?
 	__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_3, duty); // 50%?
-	__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_4, duty); // 50%?
+	__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_4, duty); // 50%?*/
 }
 /* USER CODE END 0 */
 
@@ -268,9 +268,9 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 1;
+  htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 9999;
+  htim1.Init.Period = 3999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -729,6 +729,61 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
     	motor_refresh_IT();
     }
+}
+
+void set_pwm_duty(uint8_t pwm_num, uint16_t duty)
+{
+	switch (pwm_num) {
+		case 0:
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, duty);
+			break;
+		case 1:
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, duty);
+			break;
+		case 2:
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, duty);
+			break;
+		case 3:
+			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, duty);
+			break;
+		case 4:
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, duty);
+			break;
+		case 5:
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, duty);
+			break;
+		case 6:
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, duty);
+			break;
+		case 7:
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, duty);
+			break;
+		case 8:
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, duty);
+			break;
+		case 9:
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, duty);
+			break;
+		case 10:
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_3, duty);
+			break;
+		case 11:
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_4, duty);
+			break;
+		case 12:
+			__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_1, duty);
+			break;
+		case 13:
+			__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, duty);
+			break;
+		case 14:
+			__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_3, duty);
+			break;
+		case 15:
+			__HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_4, duty);
+		default:
+			break;
+	}
 }
 /*
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)			// gombok interrupt callback

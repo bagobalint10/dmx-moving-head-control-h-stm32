@@ -65,6 +65,8 @@ uint32_t tim_2_get_value(void);
 void tim_5_set_duty(uint8_t duty);
 void tim_5_set_period(uint32_t period);
 uint32_t tim_5_get_value(void);
+//uj dolgok
+void set_pwm_duty(uint8_t pwm_num, uint16_t duty);
 
 /* USER CODE END EFP */
 

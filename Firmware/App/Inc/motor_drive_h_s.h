@@ -34,10 +34,12 @@ typedef struct
 	uint32_t current_time;
 	uint32_t prev_time;
 	uint32_t interval;
+	// microstep cuccok
+	int16_t microstep_pos;
 
 } MOTOR_TypeDef;
 
-	void motor_1_main(MOTOR_TypeDef *Motor, uint16_t dmx_pos_1, uint8_t dmx_speed);
+	void motor_1_main(MOTOR_TypeDef *Motor, uint16_t dmx_pos_1, float dmx_speed);
 	void motor_1_update_timer(MOTOR_TypeDef *Motor);
 	void motor_1_set_0_pos(MOTOR_TypeDef *Motor);
 

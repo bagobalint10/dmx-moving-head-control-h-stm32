@@ -88,20 +88,38 @@ void my_main_init(void)
 
 
 	// Motor_1 kalibrációs értékei
-	Motor_1.max_speed_level = 30000;	// ez majd lehet nem kell -- ideiglenesen
-	Motor_1.current_pos = MAX_POS;		// indulásnál max érték
-	Motor_1.n_max = 30000; 				// min 8000 - max 30000
-	Motor_1.v_max = 80.0f; 				// min 20 - max 80
-	Motor_1.v_start = 1.5f; 				// min 0.2 - max 1.5  --> 10ms
-	Motor_1.interval = 1000;	//tmp idozitesi ido
+	//Motor_1.max_speed_level = 500;	// ez majd lehet nem kell -- ideiglenesen
+	//Motor_1.current_pos = MAX_POS;		// indulásnál max érték
+	Motor_1.current_pos = 500;
+	Motor_1.n_max = 50;
+	//Motor_1.v_max = 2.0f;
+	//Motor_1.v_start = 0.0f; 				// min 0.2 - max 1.5  --> 10ms
+	Motor_1.interval = 10;	//tmp idozitesi ido
 
 }
 
 void my_main_loop(void)
 {
 
-//motor_1_main(&Motor_1 , 0, 0);
 
+
+
+	static uint32_t tmp_current_time = 0;
+	tmp_current_time = HAL_GetTick();
+	static uint16_t tmp_pos = 0;
+
+	static uint32_t tmp_time_0 = 0;
+	static uint16_t tmp_interval_0 = 10000;
+
+	if ((uint32_t)(tmp_current_time - tmp_time_0)>= tmp_interval_0)
+	{
+		tmp_time_0 = tmp_current_time;
+
+		if(tmp_pos)tmp_pos = 0;
+		else tmp_pos = 1600;
+	}
+
+	motor_1_main(&Motor_1 , tmp_pos, 1.5); // 1- 5/10?
 //motor_1_set_0_pos(&Motor_1);
 
 // pwm duty --> minden lépésnél frisíteni ( currnt pos függvényében)
