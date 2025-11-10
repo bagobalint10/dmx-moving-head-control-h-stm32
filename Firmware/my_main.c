@@ -26,91 +26,289 @@ MOTOR_TypeDef Motor_8 = {0};
 #define	TILT_CH 13
 #define	TILT_F_CH 14
 #define	PT_SPEED_CH 15
-
-#define SM_TIME 5							// 70ms egy frame
-#define SM_COUNT 17							// 85 ms mintavételezés
-#define SM_COUNT_REV 0.058824f				// 17 db interpolálás 5ms enként
-*/
-/*
-static uint16_t dmx_pan_value = 0;
-static uint16_t dmx_tilt_value = 0;
-static uint8_t  dmx_speed_value = 0;
-static uint8_t  reset_f = 0; 				// 0--reset,  > 0 fut a program
-
-static uint16_t dmx_pan_sm_value = 0;
-static uint16_t dmx_tilt_sm_value = 0;
 */
 
-static uint16_t pos_1 = 0;
-static uint16_t pos_2 = 0;
-static uint16_t pos_3 = 0;
-static uint16_t pos_4 = 0;
-static uint16_t pos_5 = 0;
-static uint16_t pos_6 = 0;
-static uint16_t pos_7 = 0;
-static uint16_t pos_8 = 0;
+static int16_t pos_1 = 0;
+static int16_t pos_2 = 0;
+static int16_t pos_3 = 0;
+static int16_t pos_4 = 0;
+static int16_t pos_5 = 0;
+static int16_t pos_6 = 0;
+static int16_t pos_7 = 0;
+static int16_t pos_8 = 0;
+
+static float speed_1 = 0;
+static float speed_2 = 0;
+static float speed_3 = 0;
+static float speed_4 = 0;
+static float speed_5 = 0;
+static float speed_6 = 0;
+static float speed_7 = 0;
+static float speed_8 = 0;
+
+static uint8_t motor_1_reset_f = 0;
+static uint8_t motor_2_reset_f = 0;
+//static uint8_t motor_3_reset_f = 0;
+static uint8_t motor_4_reset_f = 0;
+//static uint8_t motor_5_reset_f = 0;
+//static uint8_t motor_6_reset_f = 0;
+static uint8_t motor_7_reset_f = 0;
+static uint8_t motor_8_reset_f = 0;
+
+static uint8_t reset = 1;
 
 static void dmx_channel_map(void)
 {
+	static uint16_t colorwheel_array[12] = {128, 261, 394, 527, 660, 793, 926, 1059,1192, 1325, 1458, 1591};
+	/*
+		motor_1_main(&Motor_1 , pos_1, 1.5);	// colorw
+		motor_1_main(&Motor_2 , pos_2, 2.0);	// shutter_1
+		motor_1_main(&Motor_3 , pos_3, 5.0);	// prizrot
+		motor_1_main(&Motor_4 , pos_4, 0.5);	// priz
+		motor_1_main(&Motor_5 , pos_5, 1.5);	// focus
+		motor_1_main(&Motor_6 , pos_6, 2.0);	// shutter2
+		motor_1_main(&Motor_7 , pos_7, 1.5);	// gobo
+		motor_1_main(&Motor_8 , pos_8, 1.5);	// goborot*/
 
-	pos_1 = (uint16_t)dmx_array[1];
-	pos_2 = (uint16_t)dmx_array[2];
-	pos_3 = (uint16_t)dmx_array[3];
-	pos_4 = (uint16_t)dmx_array[4];
-	pos_5 = (uint16_t)dmx_array[5];
-	pos_6 = (uint16_t)dmx_array[6];
-	pos_7 = (uint16_t)dmx_array[7];
-	pos_8 = (uint16_t)dmx_array[8];
+	float tmp;
+
+	speed_1 = 1.5f;
+	speed_2 = 2.0f;
+	speed_3 = 5.0f;
+	speed_4 = 0.5f;
+	speed_5 = 1.5f;
+	speed_6 = 2.0f;
+	speed_7 = 1.5f;
+	speed_8 = 1.5f;
+
+	pos_1 = (int16_t)dmx_array[1];
+	pos_2 = (int16_t)dmx_array[2];
+	pos_3 = (int16_t)dmx_array[3];
+	pos_4 = (int16_t)dmx_array[4];
+	pos_5 = (int16_t)dmx_array[5];
+	//pos_6 = (uint16_t)dmx_array[6]; strobe
+	pos_7 = (int16_t)dmx_array[7];
+	pos_8 = (int16_t)dmx_array[8];
+
+
+	// prism on off
+	if(pos_4 > 125) pos_4 = 257;
+	else 			pos_4 = 0;
+	// focus
+	tmp = 335.0f/255.0f;
+	tmp *= pos_5;
+	pos_5 = (int16_t)tmp;
+	// dimm
+	uint8_t tmp_pos = pos_2;
+	tmp = 100.0f/255.0f;
+	tmp *= pos_2;
+	pos_2 = (int16_t)tmp;
+
+	tmp = 75.0f/255.0f;
+	tmp *= tmp_pos;
+	pos_6 = (int16_t)tmp;
+	// prism rotate
+	tmp_pos = pos_3;
+	if(pos_3 > 55)
+	{
+		if(pos_3>155)
+		{
+			pos_3 = 3000;
+			// speed szamolas
+			tmp = 4.5f/100.0f;
+			tmp *= ((float)tmp_pos - 155.0f);
+			tmp += 0.5f;
+			speed_3 = tmp;
+		}
+		else
+		{
+			pos_3 = -3000;
+			// speed szamolas
+			tmp = 4.5f/100.0f;
+			tmp *=  ((float)tmp_pos - 55.0f);
+			tmp += 0.5f;
+			speed_3 = tmp;
+		}
+	}
+	else
+	{
+		pos_3 = 0;
+		speed_3 = 5.0f;
+	}
+	// prism on off
+	tmp_pos = pos_8;
+	if(pos_8 > 55)
+	{
+		if(pos_8>155)
+		{
+			pos_8 = 3000;
+			// speed szamolas
+			tmp = 1.0f/100.0f;
+			tmp *= ((float)tmp_pos - 155.0f);
+			tmp += 0.5f;
+			speed_8 = tmp;
+		}
+		else
+		{
+			pos_8 = -3000;
+			// speed szamolas
+			tmp = 1.0f/100.0f;
+			tmp *=  ((float)tmp_pos - 55.0f);
+			tmp += 0.5f;
+			speed_8 = tmp;
+		}
+	}
+	else
+	{
+		tmp = 800.0f/55.0f;
+		tmp *= pos_8;
+		pos_8 = (int16_t)tmp;
+		speed_8 = 1.5f;
+	}
+	// color wheel
+	//if(pos_1 == 0) pos_1 = -3000;
+	//else if(pos_1 == 255)pos_1 = 3000;
+
+	if(pos_1 <= 200)
+	{
+		tmp = 11.0f/201.0f;
+		tmp *= pos_1;
+		pos_1 = colorwheel_array[(int8_t)tmp];
+	}
+	else if(pos_1 < 225)
+	{
+		pos_1 = -3000;
+	}
+	else
+	{
+		pos_1 = 3000;
+	}
+	//84
+	uint8_t tmp_2 = 0;
+	tmp = 7.0f/256.0f;
+	tmp *= pos_7;
+	tmp_2 = (uint8_t) tmp;
+
+	tmp = tmp_2 * 228.4f;
+	tmp += 84.0f;
+	pos_7 = (int16_t)tmp;
 }
-/*
-static void dmx_signal_smoothing(void)
-{
-	static uint16_t pan_next = 0;
-	static uint16_t pan_prev = 0;
-	static uint16_t tilt_next = 0;
-	static uint16_t tilt_prev = 0;
 
+static void reset_fgv(void)
+{
+	static uint8_t hall_1_edge = 0xff;
+	static uint8_t hall_2_edge = 0xff;
+	static uint8_t hall_3_edge = 0xff;
+
+	uint8_t hall;
+
+	hall = HAL_GPIO_ReadPin(HALL_1_GPIO_Port, HALL_1_Pin); //gobo
+	hall_1_edge = ((hall_1_edge<<1) | hall);
+
+	hall = HAL_GPIO_ReadPin(HALL_2_GPIO_Port, HALL_2_Pin); //prizma
+	hall_2_edge = ((hall_2_edge<<1) | hall);
+
+	hall = HAL_GPIO_ReadPin(HALL_3_GPIO_Port, HALL_3_Pin); //color
+	hall_3_edge = ((hall_3_edge<<1) | hall);
 
 	static uint32_t current_time = 0;
 	static uint32_t prev_time = 0;
-	static uint16_t count = 0;
+	static uint16_t interval = 10000;
+	//static uint8_t time_f = 0;
+	//static uint8_t time_f_prev = 0;
+	//static uint8_t hall_gobo_rot_f = 0;
 
 	current_time = HAL_GetTick();
 
-	if ((uint32_t)(current_time - prev_time) >= SM_TIME)	// időzítés
+
+
+	if(((hall_3_edge & 0x03 ) == 0x02) && !motor_1_reset_f)	// lefuto el colorw
 	{
-		prev_time = current_time;
-		count++;
-
-		if(count >= SM_COUNT )								// mintavételezés
-		{
-			count = 0;
-
-			tilt_prev = tilt_next;
-			tilt_next = dmx_tilt_value;
-
-			pan_prev = pan_next;
-			pan_next = dmx_pan_value;
-		}
-
-		float step;											// interpolálás
-
-		step = ((float)tilt_next - tilt_prev) * SM_COUNT_REV; 	// lépéskülönbség / interp. szám
-		dmx_tilt_sm_value = (uint16_t)((float)tilt_prev + ((float)count * step));
-
-		step = ((float)pan_next - pan_prev) * SM_COUNT_REV; 	// lépéskülönbség / interp. szám
-		dmx_pan_sm_value = (uint16_t)((float)pan_prev + ((float)count * step));
+		motor_1_set_0_pos(&Motor_1);
+		pos_1 = 0;
+		motor_1_reset_f = 1;
 	}
+
+	if(((hall_2_edge & 0x03 ) == 0x02) && !motor_4_reset_f)	// lefuto el prism
+	{
+		motor_1_set_0_pos(&Motor_4);
+		pos_4 = 0;
+		motor_4_reset_f = 1;
+	}
+
+	if(((hall_1_edge & 0x03 ) == 0x02) && !motor_7_reset_f)	// lefuto el gobo
+	{
+		motor_1_set_0_pos(&Motor_7);
+		pos_7 = 0;
+		motor_7_reset_f = 1;
+
+		//idozite inditatas
+		prev_time = current_time;
+
+	}
+	else if(motor_7_reset_f == 1)	// első hall megtalálása
+	{
+		//figyelni eltűnik e a jel
+		// időzítő figyelése
+		if(hall_1_edge == 0xff)		// ha nincs hall
+		{
+			// rossz hall
+			motor_7_reset_f = 0;
+			pos_7 = -3000;
+		}
+		else if ((uint32_t)(current_time - prev_time)>= interval)
+		{
+			motor_7_reset_f = 2;
+		}
+	}
+	else if(motor_7_reset_f == 2)
+	{
+		// gobo adott poziciora
+		pos_7 = 770;
+		motor_7_reset_f = 3;
+	}
+	else if((motor_7_reset_f == 3)&&(hall_1_edge == 0xff)) // ha odaért és magas a hall
+	{
+		motor_7_reset_f = 4;
+	}
+	else if((motor_7_reset_f == 4)&&(hall_1_edge == 0x00)&& !motor_8_reset_f && (Motor_7.current_pos == 870)) // ha odaért és magas a hall
+	{
+		motor_1_set_0_pos(&Motor_8);
+		pos_8 = 0;
+		motor_8_reset_f = 1;
+	}
+
+
+	if((Motor_2.current_pos == 100) && !motor_2_reset_f)
+	{
+		//Motor_2.current_pos = 100; // shutter kalibrálás
+		Motor_2.current_pos = 112;
+		motor_2_reset_f = 1;
+
+		// léptetés run ba
+	}
+	if(motor_2_reset_f && motor_8_reset_f && motor_1_reset_f)
+	{
+		reset = 0;
+	}
+	// ha alaphelyzet reset = 0;
+
+	// gobo idomeres
+
 }
-*/
+static void run_fgv(void)
+{
+
+}
+
 void my_main_init(void)
 {
 	Motor_1.current_pos = 100;
-	Motor_2.current_pos = 100;
+	Motor_2.current_pos = 1500;
 	Motor_3.current_pos = 100;
-	Motor_4.current_pos = 100;
-	Motor_5.current_pos = 100;
-	Motor_6.current_pos = 100;
+	Motor_4.current_pos = 1500;
+	Motor_5.current_pos = 1500;
+	Motor_6.current_pos = 1500;
 	Motor_7.current_pos = 100;
 	Motor_8.current_pos = 100;
 
@@ -128,7 +326,7 @@ void my_main_init(void)
 	Motor_1.pin_1 = 0;
 	Motor_1.pin_2 = 1;
 
-	Motor_2.n_max = 25;
+	Motor_2.n_max = 25;	//shutter 1
 	Motor_2.pin_1 = 2;
 	Motor_2.pin_2 = 3;
 
@@ -144,9 +342,9 @@ void my_main_init(void)
 	Motor_5.pin_1 = 8;
 	Motor_5.pin_2 = 9;
 
-	Motor_6.n_max = 25;
-	Motor_6.pin_1 = 10;
-	Motor_6.pin_2 = 11;
+	Motor_6.n_max = 25;		//shutter 2
+	Motor_6.pin_1 = 11;
+	Motor_6.pin_2 = 10;
 
 	Motor_7.n_max = 200;
 	Motor_7.pin_1 = 12;
@@ -156,7 +354,24 @@ void my_main_init(void)
 	Motor_8.pin_1 = 14;
 	Motor_8.pin_2 = 15;
 
+	// reset sebesseg es koordinata
+	pos_1 = -3000;
+	pos_2 = 0;
+	pos_3 = 0;
+	pos_4 = 0;
+	pos_5 = 0;
+	pos_6 = 0;
+	pos_7 = -3000;
+	pos_8 = -3000;
 
+	speed_1 = 0.5f;
+	speed_2 = 0.5f;
+	speed_3 = 0.5f;
+	speed_4 = 0.5f;
+	speed_5 = 0.5f;
+	speed_6 = 0.5f;
+	speed_7 = 0.5f;
+	speed_8 = 0.5f;
 
 /*	motor mapping
  * 	motor_1		color_w		pin  0 1
@@ -173,8 +388,9 @@ void my_main_init(void)
 
 void my_main_loop(void)
 {
-	dmx_channel_map();
 
+
+/*
 	static uint32_t tmp_current_time = 0;
 	tmp_current_time = HAL_GetTick();
 	static uint16_t tmp_pos = 0;
@@ -188,16 +404,40 @@ void my_main_loop(void)
 
 		if(tmp_pos)tmp_pos = 0;
 		else tmp_pos = 80;
+	}*/
+
+
+	if(reset)
+	{
+		reset_fgv();
+	}
+	else
+	{
+		dmx_channel_map();
+		run_fgv();
 	}
 
+
+	motor_1_main(&Motor_1 , pos_1, speed_1);	// colorw
+	motor_1_main(&Motor_2 , pos_2, speed_2);	// shutter_1
+	motor_1_main(&Motor_3 , pos_3, speed_3);	// prizrot
+	motor_1_main(&Motor_4 , pos_4, speed_4);	// priz
+	motor_1_main(&Motor_5 , pos_5, speed_5);	// focus
+	motor_1_main(&Motor_6 , pos_6, speed_6);	// shutter2
+	motor_1_main(&Motor_7 , pos_7, speed_7);	// gobo
+	motor_1_main(&Motor_8 , pos_8, speed_8);	// goborot
+
+	/*
 	motor_1_main(&Motor_1 , pos_1, 1.5);	// colorw
 	motor_1_main(&Motor_2 , pos_2, 2.0);	// shutter_1
 	motor_1_main(&Motor_3 , pos_3, 5.0);	// prizrot
-	motor_1_main(&Motor_4 , pos_4, 0.5);	//priz
-	motor_1_main(&Motor_5 , pos_5, 1.5);	//focus
-	motor_1_main(&Motor_6 , pos_6, 2.0);	//shutter2
-	motor_1_main(&Motor_7 , pos_7, 1.5);	//gobo
-	motor_1_main(&Motor_8 , pos_8, 1.5);	//goborot
+	motor_1_main(&Motor_4 , pos_4, 0.5);	// priz
+	motor_1_main(&Motor_5 , pos_5, 1.5);	// focus
+	motor_1_main(&Motor_6 , pos_6, 2.0);	// shutter2
+	motor_1_main(&Motor_7 , pos_7, 1.5);	// gobo
+	motor_1_main(&Motor_8 , pos_8, 1.5);	// goborot*/
+
+
 }
 
 void motor_refresh_IT(void)			// 1 ms időzítés

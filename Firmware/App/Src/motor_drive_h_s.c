@@ -114,12 +114,12 @@ void motor_1_update_timer(MOTOR_TypeDef *Motor)
 
 	}
 
+	if(Motor->current_pos > 1599) Motor->current_pos = 0;		// körbafordulás 1600 step
+	else if(Motor->current_pos < 0) Motor->current_pos = 1599;
 	// microstep ovf
 	if(Motor->microstep_pos > 31) Motor->microstep_pos = 0;
 	else if(Motor->microstep_pos < 0) Motor->microstep_pos = 31;
 	// set pwm duty
-	// pwm A = microstep_pos
-	// pwm_B = microstep_pos + 90 fok? 1/16 --> + 8 eltolás
 	int16_t microstep_pos_2 = ((Motor->microstep_pos) + 8);
 	if(microstep_pos_2 > 31) microstep_pos_2 = microstep_pos_2 - 32;
 
@@ -133,9 +133,9 @@ void motor_1_update_timer(MOTOR_TypeDef *Motor)
 	HAL_GPIO_WritePin(TEST_OUT_GPIO_Port, TEST_OUT_Pin, 0);
 }
 
-void motor_1_main(MOTOR_TypeDef *Motor, uint16_t dmx_pos_1, float dmx_speed)
+void motor_1_main(MOTOR_TypeDef *Motor, int16_t dmx_pos_1, float dmx_speed)
 {
-	uint32_t tim_state;								// timer jelenlegi �ll�sa
+	//uint32_t tim_state;								// timer jelenlegi �ll�sa
 	uint16_t motor_enable_buf;						// timer-enable, szinkroniz�l�s --> bufferel�s
 
 	Motor->input_pos =((int32_t)dmx_pos_1 + ZERO_POS);		// beolvasott poz�ci�
@@ -167,7 +167,7 @@ void motor_1_main(MOTOR_TypeDef *Motor, uint16_t dmx_pos_1, float dmx_speed)
 void motor_1_set_0_pos(MOTOR_TypeDef *Motor) 	// hall hatására fut le --> resetből!!!!
 {
 	Motor->current_pos = ZERO_POS;
-	Motor->current_level = 50;
+	Motor->current_level = 1;
 }
 
 
