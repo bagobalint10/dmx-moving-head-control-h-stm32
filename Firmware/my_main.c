@@ -245,7 +245,7 @@ static void dmx_channel_map(void)
 	tmp_2 = (uint8_t) tmp;
 
 	tmp = tmp_2 * 228.4f;
-	tmp += 84.0f;
+	tmp += 81.0f;
 	pos_7 = (int16_t)tmp;
 }
 
@@ -280,10 +280,22 @@ static void reset_fgv(void)
 	if(((hall_3_edge & 0x03 ) == 0x02) && !motor_1_reset_f)	// lefuto el colorw
 	{
 		motor_1_set_0_pos(&Motor_1);
-		pos_1 = 0;
+		pos_1 = 100;
 		motor_1_reset_f = 1;
 	}
-
+	else if((motor_1_reset_f == 1) && (Motor_1.current_pos == 200))
+	{
+		// ==200
+		pos_1 = -3000;
+		motor_1_reset_f = 2;
+	}
+	else if(((hall_3_edge & 0x03 ) == 0x02) && (motor_1_reset_f == 2))	// lefuto el prism
+	{
+		motor_1_set_0_pos(&Motor_1);
+		pos_1 = 0;
+		motor_1_reset_f = 3;
+	}
+	////
 	if(((hall_2_edge & 0x03 ) == 0x02) && !motor_4_reset_f)	// lefuto el prism
 	{
 		motor_1_set_0_pos(&Motor_4);
@@ -324,14 +336,24 @@ static void reset_fgv(void)
 			motor_7_reset_f = 0;
 			pos_7 = -3000;
 		}
-		else if ((uint32_t)(current_time - prev_time)>= interval)
+		else if ((uint32_t)(current_time - prev_time)>= interval) // jó hall
 		{
-			motor_7_reset_f = 2;
+			//motor_7_reset_f = 2;
+			//motor_1_set_0_pos(&Motor_4);
+			pos_7 = 100;
+			motor_7_reset_f = 10;
 		}
 	}
-	else if(motor_7_reset_f == 2)
+	else if((motor_7_reset_f == 10) && (Motor_7.current_pos == 200))// második reszet
+	{
+		// ha odaért
+		pos_7 = -3000;
+		motor_7_reset_f = 2;
+	}
+	else if(((hall_1_edge & 0x03 ) == 0x02)&&(motor_7_reset_f == 2))
 	{
 		// gobo adott poziciora
+		motor_1_set_0_pos(&Motor_7);
 		pos_7 = 770;
 		motor_7_reset_f = 3;
 	}
@@ -355,7 +377,7 @@ static void reset_fgv(void)
 
 		// léptetés run ba
 	}
-	if(motor_2_reset_f && motor_8_reset_f && motor_1_reset_f &&  (motor_4_reset_f == 3))
+	if(motor_2_reset_f && motor_8_reset_f && (motor_1_reset_f == 3) &&  (motor_4_reset_f == 3))
 	{
 		reset = 0;
 	}
