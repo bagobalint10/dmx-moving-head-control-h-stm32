@@ -14,5 +14,4 @@
 	void my_main_loop(void);
 	void motor_refresh_IT(void);
 
-
 #endif /* MY_MAIN_H_ */
