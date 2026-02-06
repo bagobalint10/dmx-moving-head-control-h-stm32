@@ -5,6 +5,18 @@
  *      Author: bagob
  */
 
+/*	motor mapping
+ *
+ * 	motor_1		color_w		pin  0, 1
+ * 	motor_2		shutter_1	pin  2, 3
+ * 	motor_3		prism_rot	pin  4, 5
+ * 	motor_4		prism 		pin  6, 7
+ * 	motor_5		focus 		pin  8, 9
+ * 	motor_6		shutter_2	pin  10, 11
+ * 	motor_7		gobo_wheel	pin  12, 13
+ * 	motor_8		gobo_rot	pin  14, 15
+ */
+
 #include <my_main.h>
 
 #include "main.h"
@@ -13,14 +25,14 @@
 
 #define MAX_POS 100000UL
 
-MOTOR_TypeDef Motor_1 = {0};
-MOTOR_TypeDef Motor_2 = {0};
-MOTOR_TypeDef Motor_3 = {0};
-MOTOR_TypeDef Motor_4 = {0};
-MOTOR_TypeDef Motor_5 = {0};
-MOTOR_TypeDef Motor_6 = {0};
-MOTOR_TypeDef Motor_7 = {0};
-MOTOR_TypeDef Motor_8 = {0};
+static MOTOR_TypeDef Motor_1 = {0};
+static MOTOR_TypeDef Motor_2 = {0};
+static MOTOR_TypeDef Motor_3 = {0};
+static MOTOR_TypeDef Motor_4 = {0};
+static MOTOR_TypeDef Motor_5 = {0};
+static MOTOR_TypeDef Motor_6 = {0};
+static MOTOR_TypeDef Motor_7 = {0};
+static MOTOR_TypeDef Motor_8 = {0};
 
 static int16_t pos_1 = 0;
 static int16_t pos_2 = 0;
@@ -47,17 +59,6 @@ static uint8_t motor_7_reset_f = 0;
 static uint8_t motor_8_reset_f = 0;
 
 static uint8_t reset = 1;
-
-/*	motor mapping
- * 	motor_1		color_w		pin  0 1
- * 	motor_2		shutter_1	pin  2 3
- * 	motor_3		pris_rot	pin  4 5
- * 	motor_4		pris 		pin  6 7
- * 	motor_5		focus 		pin  8 9
- * 	motor_6		shutter_2	pin  10 11
- * 	motor_7		gobo		pin  12 13
- * 	motor_8		gobo_rot	pin  14 15
- */
 
 static void dmx_channel_map(void)
 {
