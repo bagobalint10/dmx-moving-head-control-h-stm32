@@ -12,7 +12,6 @@
 #include <motor_drive_h_s.h>
 
 #define MAX_POS 100000UL
-
 #define FALLING_EDGE(val_cont) (((val_cont) & 0x03) == 0x02)
 
 typedef struct
@@ -43,11 +42,7 @@ enum  Motor_ids
 		MOTOR_COUNT
 	};
 
-enum Motor_limit_type
-	{
-		HALL_SENSOR,
-		BLOCKING
-	};
+enum Motor_limit_type {HALL_SENSOR, BLOCKING};
 
 typedef struct
 	{
@@ -55,122 +50,79 @@ typedef struct
 		uint8_t limit_type;
 		uint8_t pin1, pin2;
 		int max_speed;
+		float start_speed;
 
 	} Motor_Config;
 
 static Motor_Config motor_config[MOTOR_COUNT] =
-{
-	[MOTOR_1] = {.name = "color_wheel", 	.limit_type = HALL_SENSOR, 	.pin1 = 0, 	.pin2 = 1, 	.max_speed = 200},
-	[MOTOR_2] = {.name = "shutter_1", 		.limit_type = BLOCKING, 	.pin1 = 2, 	.pin2 = 3, 	.max_speed = 25	},
-	[MOTOR_3] = {.name = "prism_rotate", 	.limit_type = BLOCKING,		.pin1 = 4, 	.pin2 = 5, 	.max_speed = 500},
-	[MOTOR_4] = {.name = "prism_switch", 	.limit_type = HALL_SENSOR, 	.pin1 = 6, 	.pin2 = 7, 	.max_speed = 50	},
-	[MOTOR_5] = {.name = "focus", 			.limit_type = BLOCKING, 	.pin1 = 8, 	.pin2 = 9, 	.max_speed = 100},
-	[MOTOR_6] = {.name = "shutter_2", 		.limit_type = BLOCKING, 	.pin1 = 11,	.pin2 = 10, .max_speed = 25	},
-	[MOTOR_7] = {.name = "gobo_wheel", 		.limit_type = HALL_SENSOR, 	.pin1 = 12, .pin2 = 13, .max_speed = 200},
-	[MOTOR_8] = {.name = "gobo_rotate", 	.limit_type = HALL_SENSOR, 	.pin1 = 14, .pin2 = 15, .max_speed = 200},
+	{
+		[MOTOR_1] = {.name = "color_wheel", 	.limit_type = HALL_SENSOR, 	.pin1 = 0, 	.pin2 = 1, 	.max_speed = 200},
+		[MOTOR_2] = {.name = "shutter_1", 		.limit_type = BLOCKING, 	.pin1 = 2, 	.pin2 = 3, 	.max_speed = 25	},
+		[MOTOR_3] = {.name = "prism_rotate", 	.limit_type = BLOCKING,		.pin1 = 4, 	.pin2 = 5, 	.max_speed = 500},
+		[MOTOR_4] = {.name = "prism_switch", 	.limit_type = HALL_SENSOR, 	.pin1 = 6, 	.pin2 = 7, 	.max_speed = 50	},
+		[MOTOR_5] = {.name = "focus", 			.limit_type = BLOCKING, 	.pin1 = 8, 	.pin2 = 9, 	.max_speed = 100},
+		[MOTOR_6] = {.name = "shutter_2", 		.limit_type = BLOCKING, 	.pin1 = 11,	.pin2 = 10, .max_speed = 25	},
+		[MOTOR_7] = {.name = "gobo_wheel", 		.limit_type = HALL_SENSOR, 	.pin1 = 12, .pin2 = 13, .max_speed = 200},
+		[MOTOR_8] = {.name = "gobo_rotate", 	.limit_type = HALL_SENSOR, 	.pin1 = 14, .pin2 = 15, .max_speed = 200},
 
-};
+	};
 
 typedef struct
-{
-	uint8_t value_container;
-	GPIO_TypeDef* GPIO_Port;
-	uint16_t GPIO_pin;
+	{
+		uint8_t value_container;
+		GPIO_TypeDef* GPIO_Port;
+		uint16_t GPIO_pin;
 
-} Hall_Sensor;
+	} Hall_Sensor;
 
 static Motors motors[MOTOR_COUNT] = {0};
 
-static MOTOR_TypeDef Motor_1 = {0};
-static MOTOR_TypeDef Motor_2 = {0};
-//static MOTOR_TypeDef Motor_3 = {0};
-//static MOTOR_TypeDef Motor_4 = {0};
-//static MOTOR_TypeDef Motor_5 = {0};
-//static MOTOR_TypeDef Motor_6 = {0};
-//static MOTOR_TypeDef Motor_7 = {0};
-//static MOTOR_TypeDef Motor_8 = {0};
 
-static int16_t pos_1 = 0;
-static int16_t pos_2 = 0;
-static int16_t pos_3 = 0;
-static int16_t pos_4 = 0;
-static int16_t pos_5 = 0;
-static int16_t pos_6 = 0;
-static int16_t pos_7 = 0;
-static int16_t pos_8 = 0;
-
-static float speed_1 = 0;
-static float speed_2 = 0;
-static float speed_3 = 0;
-static float speed_4 = 0;
-static float speed_5 = 0;
-static float speed_6 = 0;
-static float speed_7 = 0;
-static float speed_8 = 0;
-
-//static uint8_t motor_1_reset_f = 0;
-//static uint8_t motor_2_reset_f = 0;
-//static uint8_t motor_4_reset_f = 0;
-//static uint8_t motor_7_reset_f = 0;
-//static uint8_t motor_8_reset_f = 0;
-
-
-
-static void dmx_channel_map(void)
+static void prism_control(int16_t* pos)
 {
-	static uint16_t colorwheel_array[12] = {128, 261, 394, 527, 660, 793, 926, 1059,1192, 1325, 1458, 1591};
+	if(*pos > 125) 	*pos = 257;
+	else 			*pos = 0;
+}
+
+static void focus_control(int16_t* pos)
+{
 	float tmp;
 
-	speed_1 = 1.5f;
-	speed_2 = 5.0f;
-	speed_3 = 5.0f;
-	speed_4 = 0.5f;
-	speed_5 = 1.5f;
-	speed_6 = 5.0f;
-	speed_7 = 1.5f;
-	speed_8 = 1.5f;
-
-	pos_1 = (int16_t)dmx_array[1];
-	pos_2 = (int16_t)dmx_array[2];
-	pos_3 = (int16_t)dmx_array[3];
-	pos_4 = (int16_t)dmx_array[4];
-	pos_5 = (int16_t)dmx_array[5];
-	pos_6 = (int16_t)dmx_array[6];
-	pos_7 = (int16_t)dmx_array[7];
-	pos_8 = (int16_t)dmx_array[8];
-
-	// prism on off
-	if(pos_4 > 125) pos_4 = 257;
-	else 			pos_4 = 0;
-
-	// focus
 	tmp = 335.0f/255.0f;
-	tmp *= pos_5;
-	pos_5 = (int16_t)tmp;
+	tmp *= (*pos);
+	*pos = (int16_t)tmp;
+}
 
-	// strobe 6 pos alapján --> pos 2
-	uint8_t tmp_pos;
-	uint8_t tmp_pos_6;
-	static uint32_t strobe_interval;
-	static uint32_t current_time = 0;
-	static uint32_t prev_time = 0;
-	static uint8_t strobe_f = 0;
+static void dimm_control(int16_t* pos_a, int16_t* pos_b)
+{
+	float tmp;
+	int16_t tmp_pos = *pos_b;
 
-	// dimm pos_2 alapján
-	tmp_pos_6 = pos_6;
-	tmp_pos = pos_2;
+	tmp = tmp_pos;
+
 	tmp = 100.0f/255.0f;
-	tmp *= pos_2;
-	pos_2 = (int16_t)tmp;
+	tmp *= *pos_b;
+	*pos_b = (int16_t)tmp;
 
 	tmp = 75.0f/255.0f;
 	tmp *= tmp_pos;
-	pos_6 = (int16_t)tmp;
+	*pos_a = (int16_t)tmp;
+}
 
-	if(tmp_pos_6 >55)
+static void strobe_control(int16_t* pos_a, int16_t* pos_b, uint16_t input_pos)
+{
+	static uint8_t strobe_f = 0;
+
+	static uint32_t strobe_interval;
+	static uint32_t current_time = 0;
+	static uint32_t prev_time = 0;
+
+	float tmp;
+
+	if(input_pos > 55)
 	{
-		tmp = 9.0f/201.0f;
-		tmp *= ((float)tmp_pos_6-55.0f);
+		tmp = 9.0f / 201.0f;
+		tmp *= ((float)input_pos - 55.0f);
 		tmp += 1.0f;
 
 		current_time = HAL_GetTick();
@@ -179,110 +131,152 @@ static void dmx_channel_map(void)
 		if ((uint32_t)(current_time - prev_time)>= strobe_interval)
 		{
 			prev_time = current_time;
-			HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 			strobe_f = 1;
 		}
 
-		if(strobe_f && (Motor_2.current_pos == (pos_2 + 100)))
+		if(strobe_f && (motors[MOTOR_2].driver_parameters.current_pos == ((*pos_b) + 100)))
 		{
 			strobe_f = 0;
 		}
 
 		if(!strobe_f)
 		{
-			pos_2 = 0;
-			pos_6 = 0;
+			*pos_a = 0;
+			*pos_b = 0;
+		}
+	}
+}
+
+static void prism_rotate_control(int16_t* pos, float* speed )
+{
+	int16_t tmp_pos = *pos;
+	float tmp;
+
+	if(*pos > 55)
+	{
+		if(*pos>155)
+		{
+			*pos = 3000;
+
+			tmp = 4.5f/100.0f;
+			tmp *= ((float)tmp_pos - 155.0f);
+			tmp += 0.5f;
+			*speed = tmp;
+		}
+		else
+		{
+			*pos = -3000;
+
+			tmp = 4.5f/100.0f;
+			tmp *=  ((float)tmp_pos - 55.0f);
+			tmp += 0.5f;
+			*speed = tmp;
 		}
 	}
 	else
 	{
-
+		*pos = 0;
+		*speed = 5.0f;
 	}
+}
 
-	// prism rotate
-	tmp_pos = pos_3;
-	if(pos_3 > 55)
-	{
-		if(pos_3>155)
-		{
-			pos_3 = 3000;
-			// speed szamolas
-			tmp = 4.5f/100.0f;
-			tmp *= ((float)tmp_pos - 155.0f);
-			tmp += 0.5f;
-			speed_3 = tmp;
-		}
-		else
-		{
-			pos_3 = -3000;
-			// speed szamolas
-			tmp = 4.5f/100.0f;
-			tmp *=  ((float)tmp_pos - 55.0f);
-			tmp += 0.5f;
-			speed_3 = tmp;
-		}
-	}
-	else
-	{
-		pos_3 = 0;
-		speed_3 = 5.0f;
-	}
+static void gobo_rotate_control(int16_t* pos, float* speed)
+{
+	int16_t tmp_pos = *pos;
+	float tmp;
 
-	// prism on off
-	tmp_pos = pos_8;
-	if(pos_8 > 55)
+	if(*pos > 55)
 	{
-		if(pos_8>155)
+		if(*pos > 155)
 		{
-			pos_8 = 3000;
-			// speed szamolas
+			*pos = 3000;
+
 			tmp = 1.0f/100.0f;
 			tmp *= ((float)tmp_pos - 155.0f);
 			tmp += 0.5f;
-			speed_8 = tmp;
+			*speed = tmp;
 		}
 		else
 		{
-			pos_8 = -3000;
-			// speed szamolas
+			*pos = -3000;
+
 			tmp = 1.0f/100.0f;
 			tmp *=  ((float)tmp_pos - 55.0f);
 			tmp += 0.5f;
-			speed_8 = tmp;
+			*speed = tmp;
 		}
 	}
 	else
 	{
 		tmp = 800.0f/55.0f;
-		tmp *= pos_8;
-		pos_8 = (int16_t)tmp;
-		speed_8 = 1.5f;
+		tmp *= *pos;
+		*pos = (int16_t)tmp;
+		*speed = 1.5f;
 	}
+}
 
-	// color wheel
-	if(pos_1 <= 200)
-	{
-		tmp = 11.0f/201.0f;
-		tmp *= pos_1;
-		pos_1 = colorwheel_array[(int8_t)tmp];
-	}
-	else if(pos_1 < 225)
-	{
-		pos_1 = -3000;
-	}
-	else
-	{
-		pos_1 = 3000;
-	}
+static void colorwheel_control(int16_t* pos)
+{
+	static uint16_t colorwheel_array[12] = {128, 261, 394, 527, 660, 793, 926, 1059,1192, 1325, 1458, 1591};
+	float tmp;
 
+	if(*pos <= 200)
+		{
+			tmp = 11.0f/201.0f;
+			tmp *= *pos;
+			*pos = colorwheel_array[(int8_t)tmp];
+		}
+		else if(*pos < 225)
+		{
+			*pos = -3000;
+		}
+		else
+		{
+			*pos = 3000;
+		}
+}
+
+static void gobowheel_control(int16_t* pos)
+{
+	float tmp;
 	uint8_t tmp_2 = 0;
+
 	tmp = 7.0f/256.0f;
-	tmp *= pos_7;
+	tmp *= *pos;
 	tmp_2 = (uint8_t) tmp;
 
 	tmp = tmp_2 * 228.4f;
 	tmp += 81.0f;
-	pos_7 = (int16_t)tmp;
+	*pos = (int16_t)tmp;
+}
+
+static void dmx_motor_control(void)
+{
+	motors[MOTOR_1].input_parameters.speed = 1.5f;
+	motors[MOTOR_2].input_parameters.speed = 5.0f;
+	motors[MOTOR_3].input_parameters.speed = 5.0f;
+	motors[MOTOR_4].input_parameters.speed = 0.5f;
+
+	motors[MOTOR_5].input_parameters.speed = 1.5f;
+	motors[MOTOR_6].input_parameters.speed = 5.0f;
+	motors[MOTOR_7].input_parameters.speed = 1.5f;
+	motors[MOTOR_8].input_parameters.speed = 1.5f;
+
+	for(int i = MOTOR_1; i < MOTOR_COUNT; i++)
+	{
+		motors[i].input_parameters.pos = dmx_array[i+1];
+	}
+
+	uint16_t tmp_pos = motors[MOTOR_6].input_parameters.pos;
+
+	prism_control(&motors[MOTOR_4].input_parameters.pos);
+	focus_control(&motors[MOTOR_5].input_parameters.pos);
+	dimm_control(&motors[MOTOR_6].input_parameters.pos, &motors[MOTOR_2].input_parameters.pos);
+	strobe_control(&motors[MOTOR_6].input_parameters.pos, &motors[MOTOR_2].input_parameters.pos, tmp_pos);
+	prism_rotate_control(&motors[MOTOR_3].input_parameters.pos, &motors[MOTOR_3].input_parameters.speed);
+	gobo_rotate_control(&motors[MOTOR_8].input_parameters.pos, &motors[MOTOR_8].input_parameters.speed);
+	colorwheel_control(&motors[MOTOR_1].input_parameters.pos);
+	gobowheel_control(&motors[MOTOR_7].input_parameters.pos);
 }
 
 static void hall_read(Hall_Sensor* hall)
@@ -305,7 +299,7 @@ static void colorwheel_reset(void)
 		motors[MOTOR_1].input_parameters.pos = 100;
 		motors[MOTOR_1].input_parameters.motor_reset_f = 1;
 	}
-	else if((motors[MOTOR_1].input_parameters.motor_reset_f == 1) && (Motor_1.current_pos == 200))
+	else if((motors[MOTOR_1].input_parameters.motor_reset_f == 1) && (motors[MOTOR_1].driver_parameters.current_pos == 200))
 	{
 		motors[MOTOR_1].input_parameters.pos = -3000;
 		motors[MOTOR_1].input_parameters.motor_reset_f = 2;
@@ -464,7 +458,7 @@ void my_main_loop(void)
 	}
 	else
 	{
-		dmx_channel_map();
+		dmx_motor_control();
 	}
 
 	for (int i = MOTOR_1; i < MOTOR_COUNT; i++)
