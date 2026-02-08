@@ -13,11 +13,13 @@
 
 #define MAX_POS 100000UL
 
+#define FALLING_EDGE(val_cont) (((val_cont) & 0x03) == 0x02)
+
 typedef struct
 	{
 		int16_t pos;
 		float speed;
-		uint8_t motor_1_reset_f;
+		uint8_t motor_reset_f;
 
 	} Input_parameters;
 
@@ -69,16 +71,24 @@ static Motor_Config motor_config[MOTOR_COUNT] =
 
 };
 
+typedef struct
+{
+	uint8_t value_container;
+	GPIO_TypeDef* GPIO_Port;
+	uint16_t GPIO_pin;
+
+} Hall_Sensor;
+
 static Motors motors[MOTOR_COUNT] = {0};
 
 static MOTOR_TypeDef Motor_1 = {0};
 static MOTOR_TypeDef Motor_2 = {0};
 //static MOTOR_TypeDef Motor_3 = {0};
-static MOTOR_TypeDef Motor_4 = {0};
+//static MOTOR_TypeDef Motor_4 = {0};
 //static MOTOR_TypeDef Motor_5 = {0};
 //static MOTOR_TypeDef Motor_6 = {0};
-static MOTOR_TypeDef Motor_7 = {0};
-static MOTOR_TypeDef Motor_8 = {0};
+//static MOTOR_TypeDef Motor_7 = {0};
+//static MOTOR_TypeDef Motor_8 = {0};
 
 static int16_t pos_1 = 0;
 static int16_t pos_2 = 0;
@@ -98,13 +108,13 @@ static float speed_6 = 0;
 static float speed_7 = 0;
 static float speed_8 = 0;
 
-static uint8_t motor_1_reset_f = 0;
-static uint8_t motor_2_reset_f = 0;
-static uint8_t motor_4_reset_f = 0;
-static uint8_t motor_7_reset_f = 0;
-static uint8_t motor_8_reset_f = 0;
+//static uint8_t motor_1_reset_f = 0;
+//static uint8_t motor_2_reset_f = 0;
+//static uint8_t motor_4_reset_f = 0;
+//static uint8_t motor_7_reset_f = 0;
+//static uint8_t motor_8_reset_f = 0;
 
-static uint8_t reset = 1;
+
 
 static void dmx_channel_map(void)
 {
@@ -275,119 +285,147 @@ static void dmx_channel_map(void)
 	pos_7 = (int16_t)tmp;
 }
 
-static void reset_fgv(void)
+static void hall_read(Hall_Sensor* hall)
 {
-	static uint8_t hall_1_edge = 0xff;
-	static uint8_t hall_2_edge = 0xff;
-	static uint8_t hall_3_edge = 0xff;
+	uint8_t tmp;
 
-	uint8_t hall;
+	tmp = HAL_GPIO_ReadPin(hall->GPIO_Port, hall->GPIO_pin);
+	hall->value_container = ((hall->value_container<<1) | tmp);
+}
 
-	hall = HAL_GPIO_ReadPin(HALL_1_GPIO_Port, HALL_1_Pin); // gobo
-	hall_1_edge = ((hall_1_edge<<1) | hall);
+static void colorwheel_reset(void)
+{
+	static Hall_Sensor hall_3 = {.GPIO_Port = HALL_3_GPIO_Port, .GPIO_pin = HALL_3_Pin, .value_container = 0xff};
 
-	hall = HAL_GPIO_ReadPin(HALL_2_GPIO_Port, HALL_2_Pin); // prizma
-	hall_2_edge = ((hall_2_edge<<1) | hall);
+	hall_read(&hall_3);
 
-	hall = HAL_GPIO_ReadPin(HALL_3_GPIO_Port, HALL_3_Pin); // color
-	hall_3_edge = ((hall_3_edge<<1) | hall);
-
-	static uint32_t current_time = 0;
-	static uint32_t prev_time = 0;
-	static uint16_t interval = 10000;
-
-	current_time = HAL_GetTick();
-
-	if(((hall_3_edge & 0x03 ) == 0x02) && !motor_1_reset_f)
+	if(FALLING_EDGE(hall_3.value_container) && !motors[MOTOR_1].input_parameters.motor_reset_f)
 	{
-		motor_1_set_0_pos(&Motor_1);
-		pos_1 = 100;
-		motor_1_reset_f = 1;
+		motor_set_0_pos(&motors[MOTOR_1].driver_parameters);
+		motors[MOTOR_1].input_parameters.pos = 100;
+		motors[MOTOR_1].input_parameters.motor_reset_f = 1;
 	}
-	else if((motor_1_reset_f == 1) && (Motor_1.current_pos == 200))
+	else if((motors[MOTOR_1].input_parameters.motor_reset_f == 1) && (Motor_1.current_pos == 200))
 	{
-		pos_1 = -3000;
-		motor_1_reset_f = 2;
+		motors[MOTOR_1].input_parameters.pos = -3000;
+		motors[MOTOR_1].input_parameters.motor_reset_f = 2;
 	}
-	else if(((hall_3_edge & 0x03 ) == 0x02) && (motor_1_reset_f == 2))
+	else if(FALLING_EDGE(hall_3.value_container) && (motors[MOTOR_1].input_parameters.motor_reset_f == 2))
 	{
-		motor_1_set_0_pos(&Motor_1);
-		pos_1 = 0;
-		motor_1_reset_f = 3;
+		motor_set_0_pos(&motors[MOTOR_1].driver_parameters);
+		motors[MOTOR_1].input_parameters.pos = 0;
+		motors[MOTOR_1].input_parameters.motor_reset_f = 3;
 	}
 
-	if(((hall_2_edge & 0x03 ) == 0x02) && !motor_4_reset_f)
-	{
-		motor_1_set_0_pos(&Motor_4);
-		pos_4 = 100;
-		motor_4_reset_f = 1;
-	}
-	else if((motor_4_reset_f == 1) && (Motor_4.current_pos == 200))
-	{
-		pos_4 = -3000;
-		motor_4_reset_f = 2;
-	}
-	else if(((hall_2_edge & 0x03 ) == 0x02) && (motor_4_reset_f == 2))
-	{
-		motor_1_set_0_pos(&Motor_4);
-		pos_4 = 0;
-		motor_4_reset_f = 3;
-	}
+}
 
+static void prism_reset(void)
+{
 
-	if(((hall_1_edge & 0x03 ) == 0x02) && !motor_7_reset_f)
+	static Hall_Sensor hall_2 = {.GPIO_Port = HALL_2_GPIO_Port, .GPIO_pin = HALL_2_Pin, .value_container = 0xff};
+
+	hall_read(&hall_2);
+
+	if(FALLING_EDGE(hall_2.value_container) && !motors[MOTOR_4].input_parameters.motor_reset_f)
 	{
-		motor_1_set_0_pos(&Motor_7);
-		pos_7 = 0;
-		motor_7_reset_f = 1;
-
-		prev_time = current_time;
-
+		motor_set_0_pos(&motors[MOTOR_4].driver_parameters);
+		motors[MOTOR_4].input_parameters.pos = 100;
+		motors[MOTOR_4].input_parameters.motor_reset_f = 1;
 	}
-	else if(motor_7_reset_f == 1)
+	else if((motors[MOTOR_4].input_parameters.motor_reset_f == 1) && (motors[MOTOR_4].driver_parameters.current_pos == 200))
 	{
-		if(hall_1_edge == 0xff)
+		motors[MOTOR_4].input_parameters.pos = -3000;
+		motors[MOTOR_4].input_parameters.motor_reset_f = 2;
+	}
+	else if(FALLING_EDGE(hall_2.value_container) && (motors[MOTOR_4].input_parameters.motor_reset_f == 2))
+	{
+		motor_set_0_pos(&motors[MOTOR_4].driver_parameters);
+		motors[MOTOR_4].input_parameters.pos = 0;
+		motors[MOTOR_4].input_parameters.motor_reset_f = 3;
+	}
+}
+
+static void gobo_reset(void)
+{
+	static Hall_Sensor hall_1 = {.GPIO_Port = HALL_1_GPIO_Port, .GPIO_pin = HALL_1_Pin, .value_container = 0xff};
+
+	enum timer_par_names {CURRENT_TIME, PREV_TIME, INTERVAL, PARAMETER_COUNT};
+	static uint32_t timer_values[PARAMETER_COUNT] = { [INTERVAL] = 10000 };
+
+	timer_values[CURRENT_TIME] = HAL_GetTick();
+	hall_read(&hall_1);
+
+	if(FALLING_EDGE(hall_1.value_container) && !motors[MOTOR_7].input_parameters.motor_reset_f)
+	{
+		motor_set_0_pos(&motors[MOTOR_7].driver_parameters);
+		motors[MOTOR_7].input_parameters.pos = 0;
+		motors[MOTOR_7].input_parameters.motor_reset_f = 1;
+
+		timer_values[PREV_TIME] = timer_values[CURRENT_TIME];
+	}
+	else if(motors[MOTOR_7].input_parameters.motor_reset_f == 1)
+	{
+		if(hall_1.value_container == 0xff)
 		{
-			motor_7_reset_f = 0;
-			pos_7 = -3000;
+			motors[MOTOR_7].input_parameters.pos = -3000;
+			motors[MOTOR_7].input_parameters.motor_reset_f = 0;
 		}
-		else if ((uint32_t)(current_time - prev_time)>= interval)
+		else if ((uint32_t)(timer_values[CURRENT_TIME] - timer_values[PREV_TIME]) >= timer_values[INTERVAL])
 		{
-			pos_7 = 100;
-			motor_7_reset_f = 10;
+			motors[MOTOR_7].input_parameters.pos = 100;
+			motors[MOTOR_7].input_parameters.motor_reset_f = 10;
 		}
 	}
-	else if((motor_7_reset_f == 10) && (Motor_7.current_pos == 200))
+	else if((motors[MOTOR_7].input_parameters.motor_reset_f == 10) && (motors[MOTOR_7].driver_parameters.current_pos == 200))
 	{
-		pos_7 = -3000;
-		motor_7_reset_f = 2;
+		motors[MOTOR_7].input_parameters.pos = -3000;
+		motors[MOTOR_7].input_parameters.motor_reset_f = 2;
 	}
-	else if(((hall_1_edge & 0x03 ) == 0x02)&&(motor_7_reset_f == 2))
+	else if(FALLING_EDGE(hall_1.value_container) && (motors[MOTOR_7].input_parameters.motor_reset_f == 2))
 	{
-		motor_1_set_0_pos(&Motor_7);
-		pos_7 = 770;
-		motor_7_reset_f = 3;
+		motor_set_0_pos(&motors[MOTOR_7].driver_parameters);
+		motors[MOTOR_7].input_parameters.pos = 770;
+		motors[MOTOR_7].input_parameters.motor_reset_f = 3;
 	}
-	else if((motor_7_reset_f == 3)&&(hall_1_edge == 0xff))
+	else if((motors[MOTOR_7].input_parameters.motor_reset_f == 3) && (hall_1.value_container == 0xff))
 	{
-		motor_7_reset_f = 4;
+		motors[MOTOR_7].input_parameters.motor_reset_f = 4;
 	}
-	else if((motor_7_reset_f == 4)&&(hall_1_edge == 0x00)&& !motor_8_reset_f && (Motor_7.current_pos == 870))
+	else if((motors[MOTOR_7].input_parameters.motor_reset_f== 4) && (hall_1.value_container == 0x00)&& !motors[MOTOR_8].input_parameters.motor_reset_f && (motors[MOTOR_7].driver_parameters.current_pos == 870))
 	{
-		motor_1_set_0_pos(&Motor_8);
-		pos_8 = 0;
-		motor_8_reset_f = 1;
+		motor_set_0_pos(&motors[MOTOR_8].driver_parameters);
+		motors[MOTOR_8].input_parameters.pos = 0;
+		motors[MOTOR_8].input_parameters.motor_reset_f = 1;
+	}
+}
+
+static void shutter_corrigation(void)
+{
+	if((motors[MOTOR_2].driver_parameters.current_pos == 100) && !motors[MOTOR_2].input_parameters.motor_reset_f)
+	{
+		motors[MOTOR_2].input_parameters.pos = 112;
+		motors[MOTOR_2].input_parameters.motor_reset_f = 1;
+	}
+}
+
+static uint8_t reset_motors(void)
+{
+	static uint8_t reset = 1;
+
+	colorwheel_reset();
+	prism_reset();
+	gobo_reset();
+	shutter_corrigation();
+
+	if(motors[MOTOR_2].input_parameters.motor_reset_f && motors[MOTOR_8].input_parameters.motor_reset_f)
+	{
+		if((motors[MOTOR_1].input_parameters.motor_reset_f == 3) && (motors[MOTOR_4].input_parameters.motor_reset_f == 3))
+		{
+			reset = 0;
+		}
 	}
 
-	if((Motor_2.current_pos == 100) && !motor_2_reset_f)
-	{
-		Motor_2.current_pos = 112;
-		motor_2_reset_f = 1;
-	}
-	if(motor_2_reset_f && motor_8_reset_f && (motor_1_reset_f == 3) &&  (motor_4_reset_f == 3))
-	{
-		reset = 0;
-	}
+	return reset;
 }
 
 void my_main_init(void)
@@ -418,9 +456,11 @@ void my_main_init(void)
 
 void my_main_loop(void)
 {
+	static uint8_t reset = 1;
+
 	if(reset)
 	{
-		reset_fgv();
+		reset = reset_motors();
 	}
 	else
 	{
@@ -429,7 +469,7 @@ void my_main_loop(void)
 
 	for (int i = MOTOR_1; i < MOTOR_COUNT; i++)
 	{
-		motor_1_main(&motors[i].driver_parameters, motors[i].input_parameters.pos, motors[i].input_parameters.speed);
+		motor_main(&motors[i].driver_parameters, motors[i].input_parameters.pos, motors[i].input_parameters.speed);
 	}
 }
 
@@ -441,6 +481,6 @@ void motor_refresh_IT(void)
 	for (int i = MOTOR_1; i < MOTOR_COUNT; i++)
 	{
 		motors[i].driver_parameters.current_time = Motor_Tick;
-		motor_1_update_timer(&motors[i].driver_parameters);
+		motor_update_timer(&motors[i].driver_parameters);
 	}
 }

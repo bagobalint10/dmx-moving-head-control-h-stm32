@@ -41,8 +41,8 @@
 
 	} MOTOR_TypeDef;
 
-	void motor_1_main(MOTOR_TypeDef *Motor, int16_t dmx_pos_1, float dmx_speed);
-	void motor_1_update_timer(MOTOR_TypeDef *Motor);
-	void motor_1_set_0_pos(MOTOR_TypeDef *Motor);
+	void motor_main(MOTOR_TypeDef *Motor, int16_t dmx_pos_1, float dmx_speed);
+	void motor_update_timer(MOTOR_TypeDef *Motor);
+	void motor_set_0_pos(MOTOR_TypeDef *Motor);
 
 #endif /* MOTOR_DRIVE_H_ */

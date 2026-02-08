@@ -52,7 +52,7 @@ static void calculate_speed(MOTOR_TypeDef *Motor, float speed)
 	Motor->max_speed_level = Motor->n_max;
 }
 
-void motor_1_update_timer(MOTOR_TypeDef *Motor)
+void motor_update_timer(MOTOR_TypeDef *Motor)
 {
 	// időzítés
 	if ((uint32_t)(Motor->current_time - Motor->prev_time) < Motor->interval)
@@ -129,7 +129,7 @@ void motor_1_update_timer(MOTOR_TypeDef *Motor)
 	HAL_GPIO_WritePin(TEST_OUT_GPIO_Port, TEST_OUT_Pin, 0);
 }
 
-void motor_1_main(MOTOR_TypeDef *Motor, int16_t dmx_pos_1, float dmx_speed)
+void motor_main(MOTOR_TypeDef *Motor, int16_t dmx_pos_1, float dmx_speed)
 {
 	uint16_t motor_enable_buf;
 
@@ -146,7 +146,7 @@ void motor_1_main(MOTOR_TypeDef *Motor, int16_t dmx_pos_1, float dmx_speed)
 	}
 }
 
-void motor_1_set_0_pos(MOTOR_TypeDef *Motor)
+void motor_set_0_pos(MOTOR_TypeDef *Motor)
 {
 	Motor->current_pos = ZERO_POS;
 	Motor->current_level = 1;
