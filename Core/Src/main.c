@@ -22,8 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <my_main.h>
-#include <interrupt_s.h>
-#include <dmx_usart_s.h>
+#include <Services/Inc/dmx_usart_s.h>
+#include <Services/Inc/interrupt_s.h>
 //#include <motor_1_drive_s.h>
 //#include <motor_2_drive_s.h>
 /* USER CODE END Includes */

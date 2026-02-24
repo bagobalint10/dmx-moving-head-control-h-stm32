@@ -8,8 +8,8 @@
 #include <my_main.h>
 
 #include "main.h"
-#include <dmx_usart_s.h>
 #include <motor_drive_h_s.h>
+#include <Services/Inc/dmx_usart_s.h>
 
 #define MAX_POS 100000UL
 #define FALLING_EDGE(val_cont) (((val_cont) & 0x03) == 0x02)
